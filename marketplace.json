@@ -1,0 +1,72 @@
+{
+  "name": "fast-agent-skills",
+  "owner": {
+    "name": "Fast Agent AI"
+  },
+  "metadata": {
+    "description": "Official skills collection for fast-agent. Includes specialized workflows for Hugging Face, LSP setup, evaluation management, code analysis, and more.",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "agent-card-hooks",
+      "source": "./skills/agent-card-hooks",
+      "skills": "./",
+      "description": "Guide for implementing fast-agent agent card tool hooks and lifecycle hooks. Use when you need to add hook functions to agent cards (tool_hooks, lifecycle_hooks, trim_tool_history) for tasks like compaction, saving history, modifying tool calls, or starting/shutting down external services."
+    },
+    {
+      "name": "hf-space-deployer",
+      "source": "./skills/hf-space-deployer",
+      "skills": "./",
+      "description": "Deploy fast-agent MCP Servers to Hugging Face Spaces using Docker. Use when the user wants to deploy an 'agent card' as an MCP Server. Includes templates and CLI commands for deploying agent cards with custom tools to HF Spaces."
+    },
+    {
+      "name": "hf-tool-builder",
+      "source": "./skills/hf-tool-builder",
+      "skills": "./",
+      "description": "Use this skill when the user wants to build tool/scripts or achieve a task where using data from the Hugging Face API would help. This is especially useful when chaining or combining API calls or the task will be repeated/automated. This Skill creates a reusable script to fetch, enrich or process data."
+    },
+    {
+      "name": "hugging-face-datasets",
+      "source": "./skills/hugging-face-datasets",
+      "skills": "./",
+      "description": "Create and manage datasets on Hugging Face Hub. Supports initializing repos, defining configs/system prompts, streaming row updates, and SQL-based dataset querying/transformation. Designed to work alongside HF MCP server for comprehensive dataset workflows."
+    },
+    {
+      "name": "hugging-face-evaluation-manager",
+      "source": "./skills/hugging-face-evaluation-manager",
+      "skills": "./",
+      "description": "Add and manage evaluation results in Hugging Face model cards. Supports extracting eval tables from README content, importing scores from Artificial Analysis API, and running custom model evaluations with vLLM/lighteval. Works with the model-index metadata format."
+    },
+    {
+      "name": "kieker-db-builder",
+      "source": "./skills/kieker-db-builder",
+      "skills": "./",
+      "description": "Install the Kieker CLI and build a SQLite code index for a Python project. Use when setting up Kieker for fast-agent-style SQL code navigation, including uv-based installation and repeatable database creation scripts."
+    },
+    {
+      "name": "lsp-project-setup",
+      "source": "./skills/lsp-project-setup",
+      "skills": "./",
+      "description": "Create or update LSP-ready project scaffolds and agent-card guidance for Python or TypeScript repos. Use when configuring tool cards or agent cards to navigate a codebase with LSP (ty, typescript-language-server), including workspace roots, venvs, and minimal project config references."
+    },
+    {
+      "name": "pr-writing-review",
+      "source": "./skills/pr-writing-review",
+      "skills": "./",
+      "description": "Extract and analyze writing improvements from GitHub PR review comments. Use when asked to show review feedback, style changes, or editorial improvements from a GitHub pull request URL. Handles both explicit suggestions and plain text feedback."
+    },
+    {
+      "name": "session-investigator",
+      "source": "./skills/session-investigator",
+      "skills": "./",
+      "description": "Investigate fast-agent session and history files to diagnose issues. Use when a session ended unexpectedly, when debugging tool loops, when correlating sub-agent traces with main sessions, or when analyzing conversation flow and timing."
+    },
+    {
+      "name": "skill-creator",
+      "source": "./skills/skill-creator",
+      "skills": "./",
+      "description": "Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an existing skill) that extends Claude's capabilities with specialized knowledge, workflows, or tool integrations."
+    }
+  ]
+}
