@@ -1,36 +1,93 @@
 ---
 name: lsp-project-setup
-description: Create or update LSP-ready project scaffolds and agent-card guidance for Python or TypeScript repos. Use when configuring tool cards or agent cards to navigate a codebase with LSP (ty, typescript-language-server), including workspace roots, venvs, and minimal project config references.
+description: LSP-enable a Python or TypeScript repository for fast-agent development. Use when setting up a new project with LSP code navigation tools, creating agent cards with LSP function tools, or configuring ty (Python) or typescript-language-server (TypeScript) integration.
 ---
 
 # LSP Project Setup
 
-Provide concise scaffolding for LSP-ready projects. Keep tool cards minimal unless the repo needs special handling.
+Enable LSP-based code navigation in a repository by creating an agent card with LSP function tools.
 
-## Output Location
+## Prerequisites
 
-Agent cards **must** be placed in `.fast-agent/agent-cards/`, not directly in `.fast-agent/`.
+- **Python**: `ty` language server (`uv tool install ty`)
+- **TypeScript**: `typescript-language-server` (`npm install -g typescript-language-server typescript`)
 
-Example paths:
-- Agent card: `.fast-agent/agent-cards/dev.md`
-- Tool card: `.fast-agent/tool-cards/my-tool.yaml`
+The `multilspy` package is included with fast-agent.
 
-## Standard Flow
+## Setup Steps
 
-1. Confirm the workspace root (repo root).
-2. Confirm the language server (ty for Python, typescript-language-server for TS).
-3. Confirm the active environment/venv and dependency install strategy.
-4. Create the agent card in `.fast-agent/agent-cards/` using the appropriate example.
-5. Copy required tool files (e.g., `multilspy_tools.py`) alongside the card.
-6. Add optional diagnostic tuning only when needed.
+### 1. Identify Language
 
-## Example Cards
+Determine if the repo is Python or TypeScript:
+- Python: has `pyproject.toml`, `setup.py`, or `requirements.txt`
+- TypeScript: has `tsconfig.json` or `package.json` with TypeScript
 
-- Python + ty: Load [references/python-card-example.md](references/python-card-example.md) for a complete agent card.
-- TypeScript: Load [references/typescript-card-example.md](references/typescript-card-example.md) for a complete agent card.
-- Shared instructions: Load [references/lsp-dev-shared.md](references/lsp-dev-shared.md) for reusable instruction blocks.
+### 2. Create Directory Structure
 
-## Language-Specific Setup Notes
+```bash
+mkdir -p .fast-agent/agent-cards
+```
 
-- Python + ty: See [references/python.md](references/python.md) for environment and diagnostic guidance.
-- TypeScript: See [references/typescript.md](references/typescript.md) for tsconfig and diagnostic guidance.
+### 3. Copy Template Files
+
+Copy both files from this skill's assets to `.fast-agent/agent-cards/`:
+
+**Python:**
+- `assets/python/dev.md` → `.fast-agent/agent-cards/dev.md`
+- `assets/python/multilspy_tools.py` → `.fast-agent/agent-cards/multilspy_tools.py`
+
+**TypeScript:**
+- `assets/typescript/dev.md` → `.fast-agent/agent-cards/dev.md`
+- `assets/typescript/multilspy_tools.py` → `.fast-agent/agent-cards/multilspy_tools.py`
+
+### 4. Customize multilspy_tools.py
+
+Edit the two constants at the top of `multilspy_tools.py`:
+
+```python
+# Adjust parents[] to match card depth from repo root
+# .fast-agent/agent-cards/ = 2 levels deep, so parents[2]
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+
+# Set directories the LSP can access (security boundary)
+_ALLOWED_DIRS = {"src", "tests", "lib"}  # Customize for your repo
+```
+
+**`_REPO_ROOT`**: The `parents[N]` value depends on where the card lives:
+- `.fast-agent/agent-cards/` → `parents[2]`
+- `.dev/agent-cards/` → `parents[2]`
+- `agent-cards/` → `parents[1]`
+
+**`_ALLOWED_DIRS`**: Set to your source directories. Use `{"."}` for entire repo (less secure).
+
+### 5. Customize dev.md
+
+Edit the agent card frontmatter:
+
+```yaml
+# Set your preferred model
+model: sonnet  # or: opus, gpt-4o, codex, etc.
+
+# Optional features
+shell: true              # Enable shell commands
+agents: [ripgrep_search] # Add sub-agents
+```
+
+### 6. Verify Setup
+
+Run from repo root:
+
+```bash
+fast-agent go
+```
+
+The agent should start with LSP tools available. Test with a query like "show me the symbols in src/main.py".
+
+## Troubleshooting
+
+Run `fast-agent check` to diagnose configuration issues.
+
+- **"ty is not available on PATH"**: Install ty (`uv tool install ty`)
+- **"typescript-language-server is not available"**: Install via npm
+- **"Path must live under..."**: Expand `_ALLOWED_DIRS` in multilspy_tools.py
+- **"Path is outside the repository root"**: Check `_REPO_ROOT` parents[] value
