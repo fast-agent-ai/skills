@@ -12,7 +12,7 @@ Provide concise scaffolding for LSP-ready projects. Keep tool cards minimal unle
 Agent cards **must** be placed in `.fast-agent/agent-cards/`, not directly in `.fast-agent/`.
 
 Example paths:
-- Agent card: `.fast-agent/agent-cards/my-agent.yaml`
+- Agent card: `.fast-agent/agent-cards/dev.md`
 - Tool card: `.fast-agent/tool-cards/my-tool.yaml`
 
 ## Standard Flow
@@ -20,15 +20,17 @@ Example paths:
 1. Confirm the workspace root (repo root).
 2. Confirm the language server (ty for Python, typescript-language-server for TS).
 3. Confirm the active environment/venv and dependency install strategy.
-4. Create the agent card in `.fast-agent/agent-cards/`.
-5. Add a minimal scaffold with `{{fileSilent:pyproject.toml}}` or `{{fileSilent:tsconfig.json}}` context.
+4. Create the agent card in `.fast-agent/agent-cards/` using the appropriate example.
+5. Copy required tool files (e.g., `multilspy_tools.py`) alongside the card.
 6. Add optional diagnostic tuning only when needed.
 
-## Shared Scaffold
+## Example Cards
 
-Load [references/shared.md](references/shared.md) for the shared scaffolding text and layout guidance.
+- Python + ty: Load [references/python-card-example.md](references/python-card-example.md) for a complete agent card.
+- TypeScript: Load [references/typescript-card-example.md](references/typescript-card-example.md) for a complete agent card.
+- Shared instructions: Load [references/lsp-dev-shared.md](references/lsp-dev-shared.md) for reusable instruction blocks.
 
-## Language-Specific Guidance
+## Language-Specific Setup Notes
 
-- Python + ty: Load [references/python.md](references/python.md).
-- TypeScript: Load [references/typescript.md](references/typescript.md).
+- Python + ty: See [references/python.md](references/python.md) for environment and diagnostic guidance.
+- TypeScript: See [references/typescript.md](references/typescript.md) for tsconfig and diagnostic guidance.
