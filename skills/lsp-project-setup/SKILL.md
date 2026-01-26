@@ -25,12 +25,12 @@ Determine if the repo is Python or TypeScript:
 ### 2. Create Directory Structure
 
 ```bash
-mkdir -p .fast-agent/agent-cards
+mkdir -p .fast-agent/agent-cards .fast-agent/tool-cards .fast-agent/hooks
 ```
 
 ### 3. Copy Template Files
 
-Copy both files from this skill's assets to `.fast-agent/agent-cards/`:
+Copy files from this skill's assets to `.fast-agent/`:
 
 **Python:**
 - `assets/python/dev.md` → `.fast-agent/agent-cards/dev.md`
@@ -39,6 +39,10 @@ Copy both files from this skill's assets to `.fast-agent/agent-cards/`:
 **TypeScript:**
 - `assets/typescript/dev.md` → `.fast-agent/agent-cards/dev.md`
 - `assets/typescript/multilspy_tools.py` → `.fast-agent/agent-cards/multilspy_tools.py`
+
+**Ripgrep search (optional but recommended):**
+- `assets/shared/ripgrep-search.md` → `.fast-agent/tool-cards/ripgrep-search.md`
+- `assets/shared/fix_ripgrep_tool_calls.py` → `.fast-agent/hooks/fix_ripgrep_tool_calls.py`
 
 ### 4. Customize multilspy_tools.py
 
@@ -60,17 +64,25 @@ _ALLOWED_DIRS = {"src", "tests", "lib"}  # Customize for your repo
 
 **`_ALLOWED_DIRS`**: Set to your source directories. Use `{"."}` for entire repo (less secure).
 
-### 5. Customize dev.md
+### 5. Customize Agent Cards
 
-Edit the agent card frontmatter:
+Edit `dev.md` frontmatter:
 
 ```yaml
-# Set your preferred model
-model: sonnet  # or: opus, gpt-4o, codex, etc.
+model: sonnet  # Your preferred model
+
+# To enable ripgrep search sub-agent:
+agents: [ripgrep_search]
 
 # Optional features
-shell: true              # Enable shell commands
-agents: [ripgrep_search] # Add sub-agents
+shell: true  # Enable shell commands
+```
+
+Edit `ripgrep-search.md` if using it:
+
+```yaml
+# Use a cheap/fast model for search - it runs frequently
+model: gpt-4o-mini  # or: haiku, gemini-flash, local model
 ```
 
 ### 6. Verify Setup

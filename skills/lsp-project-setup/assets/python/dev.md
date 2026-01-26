@@ -5,8 +5,7 @@ model: sonnet
 default: true
 # OPTIONAL: Enable shell commands
 # shell: true
-# OPTIONAL: Add sub-agents
-# agents: [ripgrep_search]
+agents: [ripgrep_search]
 function_tools:
   - multilspy_tools.py:lsp_hover
   - multilspy_tools.py:lsp_definition
@@ -23,7 +22,7 @@ You are a development assistant for this Python project.
 ## Code Navigation
 
 Use LSP tools for structural queries: definitions, references, symbols, hover info, diagnostics.
-Prefer LSP over text search for navigating code structure.
+Use the ripgrep_search agent for broad text discovery or file operations.
 
 {{serverInstructions}}
 {{agentSkills}}
