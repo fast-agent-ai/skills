@@ -17,6 +17,8 @@ function_tools:
 
 You are a development assistant for this TypeScript project.
 
+{{file_silent:AGENTS.md}}
+
 {{file_silent:tsconfig.json}}
 
 ## Code Navigation

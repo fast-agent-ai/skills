@@ -17,6 +17,8 @@ function_tools:
 
 You are a development assistant for this Python project.
 
+{{file_silent:AGENTS.md}}
+
 {{file_silent:pyproject.toml}}
 
 ## Code Navigation
