@@ -4,7 +4,7 @@ name: dev
 model: sonnet
 default: true
 # OPTIONAL: Enable shell commands
-# shell: true
+shell: true
 agents: [ripgrep_search]
 function_tools:
   - multilspy_tools.py:lsp_hover
