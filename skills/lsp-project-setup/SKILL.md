@@ -16,11 +16,22 @@ The `multilspy` package is included with fast-agent.
 
 ## Setup Steps
 
-### 1. Identify Language
+### 1. Examine the Repository
 
-Determine if the repo is Python or TypeScript:
-- Python: has `pyproject.toml`, `setup.py`, or `requirements.txt`
-- TypeScript: has `tsconfig.json` or `package.json` with TypeScript
+Before copying files, examine the repo structure:
+
+```bash
+# List top-level directories
+ls -d */
+
+# Check for config files
+ls pyproject.toml tsconfig.json package.json 2>/dev/null
+```
+
+Identify:
+- **Language**: Python (pyproject.toml) or TypeScript (tsconfig.json)
+- **Source directories**: Common patterns are `src/`, `lib/`, `app/`, `tests/`
+- **Any existing `.fast-agent/` setup**
 
 ### 2. Create Directory Structure
 
@@ -40,66 +51,57 @@ Copy files from this skill's assets to `.fast-agent/`:
 - `assets/typescript/dev.md` → `.fast-agent/agent-cards/dev.md`
 - `assets/typescript/multilspy_tools.py` → `.fast-agent/agent-cards/multilspy_tools.py`
 
-**Ripgrep search (optional but recommended):**
+**Ripgrep search (recommended):**
 - `assets/shared/ripgrep-search.md` → `.fast-agent/tool-cards/ripgrep-search.md`
 - `assets/shared/fix_ripgrep_tool_calls.py` → `.fast-agent/hooks/fix_ripgrep_tool_calls.py`
 
-### 4. Customize multilspy_tools.py
+### 4. Configure multilspy_tools.py
 
-Edit the two constants at the top of `multilspy_tools.py`:
+Edit `_ALLOWED_DIRS` based on the repo structure discovered in step 1:
 
 ```python
-# Adjust parents[] to match card depth from repo root
-# .fast-agent/agent-cards/ = 2 levels deep, so parents[2]
+# Set to the actual source directories in this repo
+_ALLOWED_DIRS = {"src", "tests"}  # ← Update based on step 1
+```
+
+Common patterns:
+- Standard: `{"src", "tests"}`
+- Monorepo: `{"packages", "apps", "libs"}`
+- Flat: `{"."}` (entire repo - less secure)
+- Django: `{"app", "apps", "tests"}`
+- Library: `{"src", "lib", "tests", "examples"}`
+
+Verify `_REPO_ROOT` is correct for the card location:
+```python
+# .fast-agent/agent-cards/ = 2 levels deep
 _REPO_ROOT = Path(__file__).resolve().parents[2]
-
-# Set directories the LSP can access (security boundary)
-_ALLOWED_DIRS = {"src", "tests", "lib"}  # Customize for your repo
 ```
 
-**`_REPO_ROOT`**: The `parents[N]` value depends on where the card lives:
-- `.fast-agent/agent-cards/` → `parents[2]`
-- `.dev/agent-cards/` → `parents[2]`
-- `agent-cards/` → `parents[1]`
+### 5. Configure Models
 
-**`_ALLOWED_DIRS`**: Set to your source directories. Use `{"."}` for entire repo (less secure).
-
-### 5. Customize Agent Cards
-
-Edit `dev.md` frontmatter:
-
+Edit `dev.md`:
 ```yaml
-model: sonnet  # Your preferred model
-
-# To enable ripgrep search sub-agent:
-agents: [ripgrep_search]
-
-# Optional features
-shell: true  # Enable shell commands
+model: sonnet  # Your preferred model for development
 ```
 
-Edit `ripgrep-search.md` if using it:
-
+Edit `ripgrep-search.md`:
 ```yaml
-# Use a cheap/fast model for search - it runs frequently
-model: gpt-4o-mini  # or: haiku, gemini-flash, local model
+model: gpt-4o-mini  # Use cheap/fast model for search
 ```
 
 ### 6. Verify Setup
-
-Run from repo root:
 
 ```bash
 fast-agent go
 ```
 
-The agent should start with LSP tools available. Test with a query like "show me the symbols in src/main.py".
+Test with: "show me the symbols in src/main.py" (adjust path to actual file).
 
 ## Troubleshooting
 
-Run `fast-agent check` to diagnose configuration issues.
+Run `fast-agent check` to diagnose issues.
 
 - **"ty is not available on PATH"**: Install ty (`uv tool install ty`)
 - **"typescript-language-server is not available"**: Install via npm
-- **"Path must live under..."**: Expand `_ALLOWED_DIRS` in multilspy_tools.py
+- **"Path must live under..."**: Add the directory to `_ALLOWED_DIRS`
 - **"Path is outside the repository root"**: Check `_REPO_ROOT` parents[] value
