@@ -256,6 +256,12 @@ async def translate_after_turn(ctx: HookContext) -> None:
         return
 ```
 
+Related example files:
+
+- `assets/examples/translate_hook.py`
+- `assets/examples/hook_translate_agent.md`
+- `assets/examples/translator_agent.md`
+
 ## Testing hooks
 
 ### Smoke test script
