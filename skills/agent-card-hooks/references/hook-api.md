@@ -1,6 +1,7 @@
-# Hook API reference (agent cards)
+# Hook API reference
 
 ## Agent card fields
+
 ```yaml
 # Tool loop hooks (per turn/tool loop)
 tool_hooks:
@@ -19,98 +20,179 @@ lifecycle_hooks:
 trim_tool_history: true
 ```
 
-Notes:
-- Hook specs use `module.py:function` and are resolved relative to the card path
-  (`src/fast_agent/tools/hook_loader.py`, `src/fast_agent/agents/llm_decorator.py`).
-- Invalid hook types raise `AgentConfigError` during card parsing.
+Hook specs use `module.py:function` format, resolved relative to the agent card path.
+Invalid hook types raise `AgentConfigError` during card parsing.
 
-## Tool hook types
-Defined in `fast_agent.tools.hook_loader.VALID_HOOK_TYPES` and executed in
-`fast_agent.agents.tool_runner.ToolRunner`:
+## Python hook classes
 
-- `before_llm_call`: before each LLM call (receives pending delta messages).
-- `after_llm_call`: after each assistant response.
-- `before_tool_call`: before executing tool calls.
-- `after_tool_call`: after tool results are received.
-- `after_turn_complete`: once after the turn finishes (stop reason != TOOL_USE).
+### ToolRunnerHooks
 
-## Lifecycle hook types
-Defined in `fast_agent.hooks.lifecycle_hook_loader.VALID_LIFECYCLE_HOOK_TYPES`:
+For programmatic tool loop hooks. Assign to `agent.tool_runner_hooks`.
 
-- `on_start`: called during `LlmDecorator.initialize()`.
-- `on_shutdown`: called during `LlmDecorator.shutdown()`.
+```python
+from fast_agent.agents.tool_runner import ToolRunnerHooks
 
-## Hook contexts
-### HookContext (tool hooks)
-File: `src/fast_agent/hooks/hook_context.py`
+@dataclass(frozen=True)
+class ToolRunnerHooks:
+    before_llm_call: Callable[[ToolRunner, list[PromptMessageExtended]], Awaitable[None]] | None
+    after_llm_call: Callable[[ToolRunner, PromptMessageExtended], Awaitable[None]] | None
+    before_tool_call: Callable[[ToolRunner, PromptMessageExtended], Awaitable[None]] | None
+    after_tool_call: Callable[[ToolRunner, PromptMessageExtended], Awaitable[None]] | None
+    after_turn_complete: Callable[[ToolRunner, PromptMessageExtended], Awaitable[None]] | None
+```
 
-```py
+### AgentLifecycleHooks
+
+For programmatic lifecycle hooks.
+
+```python
+from fast_agent.hooks.lifecycle_hook_loader import AgentLifecycleHooks
+
+@dataclass(frozen=True)
+class AgentLifecycleHooks:
+    on_start: Callable[[AgentLifecycleContext], Awaitable[None]] | None
+    on_shutdown: Callable[[AgentLifecycleContext], Awaitable[None]] | None
+```
+
+## Context objects
+
+### HookContext
+
+Passed to agent card tool hooks. Source: `src/fast_agent/hooks/hook_context.py`
+
+```python
+from fast_agent.hooks import HookContext
+
 @dataclass
 class HookContext:
-    runner: HookRunner
-    agent: MessageHistoryAgentProtocol
-    message: PromptMessageExtended
-    hook_type: str
+    runner: HookRunner           # The tool runner instance
+    agent: MessageHistoryAgentProtocol  # The agent instance
+    message: PromptMessageExtended      # Current message
+    hook_type: str               # "before_llm_call", "after_turn_complete", etc.
 
-    @property
-    def agent_name(self) -> str: ...
-    @property
-    def iteration(self) -> int: ...
-    @property
-    def is_turn_complete(self) -> bool: ...
-    @property
-    def message_history(self) -> list[PromptMessageExtended]: ...
-    def load_message_history(self, messages: list[PromptMessageExtended]) -> None: ...
+    # Properties
+    agent_name: str              # Agent name
+    iteration: int               # Current tool loop iteration
+    is_turn_complete: bool       # True if stop_reason != TOOL_USE
+    message_history: list[PromptMessageExtended]  # Current history
+    usage: UsageAccumulator | None    # Token usage stats
+    context: Context | None      # Agent's Context object
+    agent_registry: Mapping[str, AgentProtocol] | None  # All agents
+
+    # Methods
+    def get_agent(name: str) -> AgentProtocol | None  # Lookup agent by name
+    def load_message_history(messages: list[PromptMessageExtended]) -> None  # Replace history
 ```
 
-Key behaviors:
-- `hook_loader._create_hook_wrapper()` supplies `ctx.message` from the hook’s
-  signature. `before_llm_call` uses the last message from the list.
-- `ctx.agent` is always `runner._agent` (so cloned agents get the right instance).
+### AgentLifecycleContext
 
-### AgentLifecycleContext (lifecycle hooks)
-File: `src/fast_agent/hooks/lifecycle_hook_context.py`
+Passed to lifecycle hooks. Source: `src/fast_agent/hooks/lifecycle_hook_context.py`
 
-```py
+```python
+from fast_agent.hooks import AgentLifecycleContext
+
 @dataclass
 class AgentLifecycleContext:
-    agent: AgentProtocol
-    context: Context | None
-    config: AgentConfig
+    agent: AgentProtocol         # The agent instance
+    context: Context | None      # Context object (may be None)
+    config: AgentConfig          # Agent configuration
     hook_type: Literal["on_start", "on_shutdown"]
 
-    @property
-    def agent_name(self) -> str: ...
-    @property
-    def has_context(self) -> bool: ...
+    # Properties
+    agent_name: str              # Agent name
+    has_context: bool            # True if context is available
+    agent_registry: Mapping[str, AgentProtocol] | None  # All agents
+
+    # Methods
+    def get_agent(name: str) -> AgentProtocol | None  # Lookup agent by name
 ```
 
-## ToolRunner helpers you can use inside hooks
-File: `src/fast_agent/agents/tool_runner.py`
+## ToolRunner helpers
 
-- `runner.set_request_params(params)`
-- `runner.append_messages("text" | PromptMessageExtended)`
-- `runner.delta_messages` (pending messages for next LLM call)
-- `runner.iteration` (current loop count)
+Available inside Python class hooks via the `runner` parameter:
+
+```python
+runner.iteration           # Current loop count
+runner.delta_messages      # Pending messages for next LLM call
+runner.set_request_params(params)  # Update request parameters
+runner.append_messages(msg)        # Add messages to pending
+```
+
+## Output helpers
+
+### show_hook_message
+
+Render a status line with consistent formatting:
+
+```python
+from fast_agent.hooks import show_hook_message
+
+show_hook_message(
+    ctx,                    # HookContext or object with .agent attribute
+    "trimmed 6 messages",   # Message text (str or rich.Text)
+    hook_name="my_hook",    # Hook name (shown dimmed)
+    hook_kind="tool",       # "tool" or "agent"
+    style="bright_yellow",  # Prefix color (default: bright_yellow)
+)
+```
+
+### show_hook_failure
+
+Render a red failure banner:
+
+```python
+from fast_agent.hooks import show_hook_failure
+
+show_hook_failure(
+    ctx,
+    hook_name="my_hook",
+    hook_kind="tool",
+    error=exc,              # Optional exception
+)
+```
 
 ## PromptMessageExtended essentials
-File: `src/fast_agent/mcp/prompt_message_extended.py`
 
-Fields commonly used in hooks:
-- `role` (`"user" | "assistant"`)
-- `content` (list of MCP ContentBlock)
-- `tool_calls` / `tool_results`
-- `stop_reason` (`LlmStopReason.TOOL_USE`, `LlmStopReason.END_TURN`, etc.)
-- helpers: `.first_text()`, `.last_text()`, `.all_text()`
+Common fields used in hooks:
 
-## Built-in hooks + examples
-- History trimmer: `fast_agent.hooks.history_trimmer:trim_tool_loop_history`
-- Session saver: `fast_agent.hooks.session_history:save_session_history`
-- Example hook modules:
-  - `examples/hf-toad-cards/hooks/save_history.py`
-  - `examples/hf-toad-cards/hooks/fix_ripgrep_tool_calls.py`
+```python
+message.role              # "user" | "assistant"
+message.content           # list[ContentBlock]
+message.tool_calls        # dict[str, ToolCall] | None
+message.tool_results      # list[ToolResult] | None
+message.stop_reason       # LlmStopReason enum
 
-## Testing references
-- Tool hooks: `tests/integration/tool_hooks/test_tool_hooks.py`
-- Lifecycle hooks: `tests/integration/agent_hooks/test_agent_lifecycle_hooks.py`
-- Tool runner unit hooks: `tests/unit/fast_agent/agents/test_tool_runner_hooks.py`
+# Helpers
+message.first_text()      # First text content
+message.last_text()       # Last text content
+message.all_text()        # All text content joined
+```
+
+## Built-in hooks
+
+| Function | Module | Purpose |
+|----------|--------|---------|
+| `trim_tool_loop_history` | `fast_agent.hooks` | Compact tool call/result pairs in history |
+| `save_session_history` | `fast_agent.hooks` | Save history to session storage |
+
+## Source files
+
+| Component | Location |
+|-----------|----------|
+| HookContext | `src/fast_agent/hooks/hook_context.py` |
+| AgentLifecycleContext | `src/fast_agent/hooks/lifecycle_hook_context.py` |
+| ToolRunnerHooks | `src/fast_agent/agents/tool_runner.py` |
+| AgentLifecycleHooks | `src/fast_agent/hooks/lifecycle_hook_loader.py` |
+| Hook loader | `src/fast_agent/tools/hook_loader.py` |
+| Lifecycle hook loader | `src/fast_agent/hooks/lifecycle_hook_loader.py` |
+| Output helpers | `src/fast_agent/hooks/hook_messages.py` |
+| History trimmer | `src/fast_agent/hooks/history_trimmer.py` |
+
+## Test references
+
+| Test type | Location |
+|-----------|----------|
+| Tool hooks integration | `tests/integration/tool_hooks/test_tool_hooks.py` |
+| Lifecycle hooks integration | `tests/integration/agent_hooks/test_agent_lifecycle_hooks.py` |
+| History trimmer unit | `tests/unit/fast_agent/hooks/test_history_trimmer.py` |
+| Tool runner hooks unit | `tests/unit/fast_agent/agents/test_tool_runner_hooks.py` |
