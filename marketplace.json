@@ -15,6 +15,12 @@
       "description": "Guide for implementing fast-agent agent card tool hooks and lifecycle hooks. Use when you need to add hook functions to agent cards (tool_hooks, lifecycle_hooks, trim_tool_history) for tasks like compaction, saving history, modifying tool calls, or starting/shutting down external services."
     },
     {
+      "name": "compaction-strategies",
+      "source": "./skills/compaction-strategies",
+      "skills": "./",
+      "description": "Implement hook-based history compaction in fast-agent (rolling window, context threshold truncation, tool-result clearing, summary prompt compaction). Use when adding or extending compaction hooks and wiring them into agent cards."
+    },
+    {
       "name": "hf-space-deployer",
       "source": "./skills/hf-space-deployer",
       "skills": "./",
