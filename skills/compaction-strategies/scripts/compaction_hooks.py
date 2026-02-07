@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from typing import TYPE_CHECKING
 
 from mcp.types import CallToolResult, TextContent
 
@@ -8,6 +8,9 @@ from fast_agent.hooks import HookContext, show_hook_message
 from fast_agent.hooks.history_trimmer import trim_tool_loop_history
 from fast_agent.mcp.helpers.content_helpers import get_text
 from fast_agent.types import PromptMessageExtended, split_into_turns
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
 
 DEFAULT_OMITTED_TEXT = "(tool result omitted)"
 DEFAULT_COMPACTION_PROMPT = (
