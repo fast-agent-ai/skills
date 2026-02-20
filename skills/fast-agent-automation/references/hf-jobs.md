@@ -12,7 +12,12 @@ When using `hf jobs uv run`, run commands as `fast-agent <subcommand>` after `--
 - Authenticate: `hf auth login`
 - Ensure account plan includes Jobs access
 
-## One-off CPU job
+## Execution modes for Jobs
+
+- No-card mode: use runtime flags only (`--model`, `--message`, `--prompt-file`, `--results`)
+- Card mode: add `--card` and optional `--agent` when custom instruction/config is needed
+
+## One-off CPU job (card mode)
 
 ```bash
 hf jobs uv run \
@@ -30,7 +35,7 @@ hf jobs uv run \
      --results result.json
 ```
 
-## Kimi smoke test (one-off)
+## Kimi smoke test (one-off, no-card)
 
 Minimal end-to-end check for model routing + artifact output:
 

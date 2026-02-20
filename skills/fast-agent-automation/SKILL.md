@@ -13,16 +13,35 @@ Build repeatable automation around `fast-agent` CLI, container, and cloud job ex
    - local CLI
    - Docker container
    - Hugging Face Job (one-off or scheduled)
-2. Collect input mode:
+2. Choose execution mode:
+   - default agent/instruction (no card)
+   - card-driven (`--card`, optional `--agent`)
+3. Collect input mode:
    - `--message`
    - `--prompt-file`
-3. Collect model strategy:
+4. Collect model strategy:
    - single model
    - comma-separated multi-model fan-out
-4. Decide output contract:
+5. Decide output contract:
    - human-readable terminal output
    - machine-readable artifact (`--results`)
-5. Confirm secret handling before exporting env vars.
+6. Confirm secret handling before exporting env vars.
+
+## Execution mode guidance
+
+Default agent/instruction (no card) is usually enough for:
+
+- smoke tests
+- one-off prompts
+- simple scheduled jobs without custom orchestration
+
+Use an agent card when you need custom system prompts/instructions or runtime config, such as:
+
+- card-defined instruction and behavior
+- MCP server setup/allowlists
+- skill selection and `skills: []` control
+- child agents / workflow composition
+- pinned request params or model defaults
 
 ## Critical output distinction (must enforce)
 
@@ -60,6 +79,17 @@ outranks CLI `--model`.
 
 ### Single-shot local
 
+Default agent/instruction (no card):
+
+```bash
+fast-agent go \
+  --model sonnet \
+  --message "Summarize findings" \
+  --results ./artifacts/run.json
+```
+
+Card-based run:
+
 ```bash
 fast-agent go \
   --card ./cards \
@@ -91,5 +121,5 @@ Expect suffixed exports like `compare-haiku.json` and `compare-sonnet.json`.
 
 ## Scripts
 
-- `scripts/run_fast_agent.sh`: local/CI wrapper enforcing `--results`
-- `scripts/submit_hf_job.sh`: `hf jobs uv run` helper with explicit secret confirmation
+- `scripts/run_fast_agent.sh`: local/CI wrapper enforcing `--results` (supports both no-card and card-based runs)
+- `scripts/submit_hf_job.sh`: `hf jobs uv run` helper with explicit secret confirmation (supports both no-card and card-based runs)

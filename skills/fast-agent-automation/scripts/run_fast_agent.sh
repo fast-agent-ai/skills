@@ -7,10 +7,12 @@ set -euo pipefail
 usage() {
   cat <<USAGE
 Usage:
-  $(basename "$0") --card <path> --agent <name> --model <model> --message <text> --results <file>
+  $(basename "$0") [--card <path>] [--agent <name>] [--model <model>] --message <text> --results <file>
 
 Notes:
   - --results is required by this wrapper.
+  - Supports both no-card and card-based runs.
+  - If --agent is provided, --card is required.
   - Use .json extension for structured artifacts.
 USAGE
 }
@@ -33,19 +35,31 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-[[ -n "$CARD" && -n "$AGENT" && -n "$MODEL" && -n "$MESSAGE" && -n "$RESULTS" ]] || {
+[[ -n "$MESSAGE" && -n "$RESULTS" ]] || {
   echo "Missing required arguments" >&2
   usage
   exit 1
 }
 
+if [[ -n "$AGENT" && -z "$CARD" ]]; then
+  echo "--agent requires --card" >&2
+  exit 1
+fi
+
 mkdir -p "$(dirname "$RESULTS")"
 
-fast-agent go \
-  --card "$CARD" \
-  --agent "$AGENT" \
-  --model "$MODEL" \
-  --message "$MESSAGE" \
-  --results "$RESULTS"
+CMD=(fast-agent go --message "$MESSAGE" --results "$RESULTS")
+
+if [[ -n "$CARD" ]]; then
+  CMD+=(--card "$CARD")
+fi
+if [[ -n "$AGENT" ]]; then
+  CMD+=(--agent "$AGENT")
+fi
+if [[ -n "$MODEL" ]]; then
+  CMD+=(--model "$MODEL")
+fi
+
+"${CMD[@]}"
 
 echo "Saved results to: $RESULTS"

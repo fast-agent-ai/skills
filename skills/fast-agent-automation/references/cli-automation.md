@@ -9,6 +9,24 @@
 
 Use `fast-agent go` for automation.
 
+## Execution modes
+
+### 1) Default agent/instruction (no card)
+
+Use when you want simple execution and runtime-driven prompts/models.
+
+```bash
+fast-agent go --model sonnet --message "Quick summary" --results out.json
+```
+
+### 2) Card-based agent (`--card`, optional `--agent`)
+
+Use when you need custom instruction, MCP servers/tools, skill controls, or agent workflows.
+
+```bash
+fast-agent go --card ./cards --agent automation --model sonnet --message "Nightly run" --results out.json
+```
+
 Core options:
 
 - `--message`, `-m`: send text and exit interactive mode
@@ -40,6 +58,23 @@ Core options:
 - In multi-model fan-out without `--agent`, writes per-model suffixed files.
 
 ## Recommended CI recipe
+
+No-card mode:
+
+```bash
+set -euo pipefail
+
+mkdir -p artifacts
+
+fast-agent go \
+  --model sonnet \
+  --message "Run the nightly summary" \
+  --results artifacts/nightly.json
+
+test -s artifacts/nightly.json
+```
+
+Card mode:
 
 ```bash
 set -euo pipefail
@@ -79,6 +114,7 @@ Model resolution precedence includes explicit agent model values from cards/deco
 
 Practical implications:
 
+- No-card mode: CLI `--model` is the active model selector.
 - If your selected agent card defines `model: sonnet`, passing `--model haiku` will not override
   that explicit card model for that agent.
 - For minimal automation that needs runtime model selection, keep card agents model-agnostic

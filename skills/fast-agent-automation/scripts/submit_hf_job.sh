@@ -7,9 +7,9 @@ usage() {
   cat <<USAGE
 Usage:
   $(basename "$0") \
-    --card <path> \
-    --agent <name> \
-    --model <model> \
+    [--card <path>] \
+    [--agent <name>] \
+    [--model <model>] \
     --message <text> \
     [--schedule <cron-or-alias>] \
     [--flavor <hf-flavor>] \
@@ -17,6 +17,9 @@ Usage:
     [--secrets HF_TOKEN,OPENAI_API_KEY]
 
 Examples:
+  $(basename "$0") --model kimi --message "smoke test" \
+    --secrets HF_TOKEN,OPENROUTER_API_KEY
+
   $(basename "$0") --card cards --agent automation --model sonnet --message "nightly" \
     --secrets HF_TOKEN,OPENAI_API_KEY
 
@@ -49,11 +52,16 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-[[ -n "$CARD" && -n "$AGENT" && -n "$MODEL" && -n "$MESSAGE" ]] || {
+[[ -n "$MESSAGE" ]] || {
   echo "Missing required arguments" >&2
   usage
   exit 1
 }
+
+if [[ -n "$AGENT" && -z "$CARD" ]]; then
+  echo "--agent requires --card" >&2
+  exit 1
+fi
 
 IFS=',' read -r -a SECRET_KEYS <<< "$SECRETS"
 
@@ -81,12 +89,19 @@ COMMON_ARGS=(
   "${FORWARD_FLAGS[@]}"
   --
   fast-agent go
-  --card "$CARD"
-  --agent "$AGENT"
-  --model "$MODEL"
   --message "$MESSAGE"
   --results result.json
 )
+
+if [[ -n "$CARD" ]]; then
+  COMMON_ARGS+=(--card "$CARD")
+fi
+if [[ -n "$AGENT" ]]; then
+  COMMON_ARGS+=(--agent "$AGENT")
+fi
+if [[ -n "$MODEL" ]]; then
+  COMMON_ARGS+=(--model "$MODEL")
+fi
 
 if [[ -n "$SCHEDULE" ]]; then
   hf jobs scheduled uv run "$SCHEDULE" "${COMMON_ARGS[@]}"

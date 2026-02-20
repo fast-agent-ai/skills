@@ -1,6 +1,23 @@
 # Agent Card-First Patterns
 
-Prefer an agent card as the control plane for automation.
+Agent cards are optional in automation.
+
+Use no-card mode (`fast-agent go --message ...`) for simple runs.
+Use cards when you need custom instruction and configuration control.
+
+## When to use a card
+
+- Custom system/developer instruction
+- MCP server configuration, tool/resource allowlists, and auth setup
+- Skill configuration (`skills`, `skills: []`, external skills dirs)
+- Child agents / workflow composition
+- Pinned defaults (`model`, `request_params`, history files)
+
+## When not to use a card
+
+- Quick smoke tests
+- Simple one-off summaries/classification prompts
+- Jobs where runtime flags fully describe behavior
 
 ## Minimal automation card
 
