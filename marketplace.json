@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Official skills collection for fast-agent. Core tools for agent card development, deployment, and debugging.",
-    "version": "1.0.0"
+    "version": "1.1.0"
   },
   "plugins": [
     {
@@ -19,6 +19,12 @@
       "source": "./skills/compaction-strategies",
       "skills": "./",
       "description": "Implement hook-based history compaction in fast-agent (rolling window, context threshold truncation, tool-result clearing, summary prompt compaction). Use when adding or extending compaction hooks and wiring them into agent cards."
+    },
+    {
+      "name": "fast-agent-automation",
+      "source": "./skills/fast-agent-automation",
+      "skills": "./",
+      "description": "Automate fast-agent runs from CLI, Docker, and Hugging Face Jobs. Use when users need repeatable non-interactive execution (fast-agent go --message / --prompt-file), deterministic artifact handling (--results), multi-model fan-out, containerization, or scheduled/cloud execution with hf jobs and secrets management."
     },
     {
       "name": "hf-space-deployer",
