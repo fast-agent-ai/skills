@@ -26,6 +26,14 @@ Build repeatable automation around `fast-agent` CLI, container, and cloud job ex
    - human-readable terminal output
    - machine-readable artifact (`--results`)
 6. Confirm secret handling before exporting env vars.
+7. Use `fast-agent check models --for-model ... --json` to precompute candidate secret env var names when model(s) are known.
+
+### IMPORTANT SECURITY RULE
+
+Never relay raw secret values in prompts or CLI args.
+Only relay environment-variable **names** (for example `OPENAI_API_KEY`) through approved secret
+channels/stores.
+
 
 ## Execution mode guidance
 

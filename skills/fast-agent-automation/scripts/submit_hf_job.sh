@@ -2,6 +2,7 @@
 set -euo pipefail
 
 # Submit a Hugging Face Job that runs fast-agent with explicit secret confirmation.
+# IMPORTANT: never pass secret values on the CLI. Only pass secret ENV VAR NAMES via --secrets.
 
 usage() {
   cat <<USAGE
@@ -18,10 +19,10 @@ Usage:
 
 Examples:
   $(basename "$0") --model kimi --message "smoke test" \
-    --secrets HF_TOKEN,OPENROUTER_API_KEY
+    --secrets HF_TOKEN
 
   $(basename "$0") --card cards --agent automation --model sonnet --message "nightly" \
-    --secrets HF_TOKEN,OPENAI_API_KEY
+    --secrets HF_TOKEN,ANTHROPIC_API_KEY
 
   $(basename "$0") --card cards --agent automation --model sonnet --message "hourly" \
     --schedule @hourly --secrets HF_TOKEN
@@ -35,7 +36,8 @@ MESSAGE=""
 SCHEDULE=""
 FLAVOR="cpu-basic"
 TIMEOUT="2h"
-SECRETS="HF_TOKEN"
+SECRETS=""
+SECRETS_EXPLICIT=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -46,7 +48,7 @@ while [[ $# -gt 0 ]]; do
     --schedule) SCHEDULE="$2"; shift 2 ;;
     --flavor) FLAVOR="$2"; shift 2 ;;
     --timeout) TIMEOUT="$2"; shift 2 ;;
-    --secrets) SECRETS="$2"; shift 2 ;;
+    --secrets) SECRETS="$2"; SECRETS_EXPLICIT=1; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown argument: $1" >&2; usage; exit 1 ;;
   esac
@@ -63,13 +65,63 @@ if [[ -n "$AGENT" && -z "$CARD" ]]; then
   exit 1
 fi
 
+# Auto-discover candidate secret names from model(s) if not explicitly provided.
+if [[ "$SECRETS_EXPLICIT" -eq 0 ]]; then
+  if [[ -n "$MODEL" ]]; then
+    if command -v fast-agent >/dev/null 2>&1; then
+      detected="$(fast-agent check models --for-model "$MODEL" --json 2>/dev/null | python - <<'PY'
+import json, sys
+text = sys.stdin.read().strip()
+if not text:
+    print("")
+    raise SystemExit(0)
+try:
+    payload = json.loads(text)
+except Exception:
+    print("")
+    raise SystemExit(0)
+keys = payload.get("candidate_secret_env_vars") or []
+if isinstance(keys, list):
+    clean = [k for k in keys if isinstance(k, str) and k.strip()]
+    print(",".join(clean))
+else:
+    print("")
+PY
+)"
+      SECRETS="$detected"
+    fi
+  fi
+
+  # Conservative fallback: HF token only for job submission if no model-derived suggestion found.
+  if [[ -z "$SECRETS" ]]; then
+    SECRETS="HF_TOKEN"
+  fi
+fi
+
 IFS=',' read -r -a SECRET_KEYS <<< "$SECRETS"
+
+echo
+cat <<'MSG'
+IMPORTANT SECURITY RULE:
+  - NEVER pass raw secret values (tokens/keys) as CLI arguments.
+  - ONLY pass environment variable NAMES via --secrets.
+  - Secrets themselves must be stored/retrieved through a secure route
+    (HF Secrets, CI secret store, key vault, etc.).
+MSG
+echo
 
 echo "Candidate secrets to forward:"
 FORWARD_FLAGS=()
 for key in "${SECRET_KEYS[@]}"; do
   key_trimmed="$(echo "$key" | xargs)"
   [[ -n "$key_trimmed" ]] || continue
+
+  if [[ ! "$key_trimmed" =~ ^[A-Z][A-Z0-9_]*$ ]]; then
+    echo "Invalid --secrets entry: '$key_trimmed'" >&2
+    echo "Expected ENV VAR NAME only (e.g., OPENAI_API_KEY), not a secret value." >&2
+    exit 1
+  fi
+
   if [[ -n "${!key_trimmed:-}" ]]; then
     echo "  - $key_trimmed (present)"
   else

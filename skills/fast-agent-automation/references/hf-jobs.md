@@ -46,8 +46,6 @@ hf jobs uv run \
   --flavor cpu-basic \
   --timeout 20m \
   --secrets HF_TOKEN \
-  --secrets OPENROUTER_API_KEY \
-  --secrets MOONSHOT_API_KEY \
   -- fast-agent go \
      --model kimi \
      --message "HF Job smoke test: reply with exactly OK" \
@@ -76,10 +74,24 @@ hf jobs scheduled uv run @hourly \
      --results result.json
 ```
 
+## Model → secret planning helper
+
+Use fast-agent to resolve model(s) to candidate secret env var names before job submission:
+
+```bash
+fast-agent check models --for-model "sonnet,kimi" --json
+```
+
+Read `candidate_secret_env_vars` from output and pass those *names* only via `--secrets`.
+
 ## Secret safety policy
 
 Before submitting Jobs, enumerate candidate env vars and ask user confirmation.
 Never silently forward local secrets.
+
+**IMPORTANT:** Never pass raw secret values in CLI arguments.
+Only pass environment variable names (for example `--secrets OPENAI_API_KEY`) and rely on secure
+secret stores/routes (HF Secrets, CI secrets, key vaults) for the actual values.
 
 Suggested candidate list:
 
