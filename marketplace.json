@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Official skills collection for fast-agent. Core tools for agent card development, deployment, and debugging.",
-    "version": "1.1.1"
+    "version": "1.1.2"
   },
   "plugins": [
     {
@@ -31,6 +31,12 @@
       "source": "./skills/hf-space-deployer",
       "skills": "./",
       "description": "Deploy fast-agent MCP Servers to Hugging Face Spaces using Docker. Use when the user wants to deploy an agent card as an MCP Server. Includes templates and CLI commands for deploying agent cards with custom tools to HF Spaces."
+    },
+    {
+      "name": "hf-static-space-deployer",
+      "source": "./skills/hf-static-space-deployer",
+      "skills": "./",
+      "description": "Deploy general static websites and frontend apps to Hugging Face Spaces using sdk: static. Use when hosting HTML/CSS/JS sites or built SPA frontends (React, Vite, Svelte, Vue, etc.) with README YAML metadata (app_file, optional app_build_command), deployment via hf CLI or Python API, GitHub Actions sync, and static-Space troubleshooting."
     },
     {
       "name": "lsp-project-setup",
