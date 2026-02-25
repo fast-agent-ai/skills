@@ -34,6 +34,8 @@ Never relay raw secret values in prompts or CLI args.
 Only relay environment-variable **names** (for example `OPENAI_API_KEY`) through approved secret
 channels/stores.
 
+For Hugging Face Jobs specifically, prefer `--secrets NAME` (for example `--secrets OPENAI_API_KEY`).
+
 
 ## Execution mode guidance
 

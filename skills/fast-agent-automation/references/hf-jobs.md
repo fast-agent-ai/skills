@@ -89,9 +89,34 @@ Read `candidate_secret_env_vars` from output and pass those *names* only via `--
 Before submitting Jobs, enumerate candidate env vars and ask user confirmation.
 Never silently forward local secrets.
 
+HF CLI accepts secrets in two forms:
+
+- `--secrets NAME` (name-only; preferred for automation guidance/transcripts)
+- `--secrets NAME=value` (allowed by HF CLI, but avoid inline values in shared logs/transcripts)
+
+For this skill, prefer **name-only** usage so secret values are handled by secure storage/routing,
+not pasted into command strings.
+
 **IMPORTANT:** Never pass raw secret values in CLI arguments.
 Only pass environment variable names (for example `--secrets OPENAI_API_KEY`) and rely on secure
 secret stores/routes (HF Secrets, CI secrets, key vaults) for the actual values.
+
+### Simple demonstration
+
+Safe (name-only):
+
+```bash
+hf jobs uv run \
+  --with fast-agent-mcp \
+  --secrets OPENAI_API_KEY \
+  -- fast-agent go --model responses.gpt-5-mini --message "hi" --results result.json
+```
+
+Not allowed in this skill guidance (raw value visible):
+
+```bash
+hf jobs uv run ... --secrets OPENAI_API_KEY=sk_live_abc123
+```
 
 Suggested candidate list:
 
