@@ -125,6 +125,74 @@ Suggested candidate list:
 - `ANTHROPIC_API_KEY`
 - provider-specific model keys requested by the user
 
+## In-job artifact handling (important)
+
+Artifacts created by `fast-agent go --results ...` live inside the Job container filesystem.
+They are **not** automatically downloaded to your local machine after completion.
+
+### Recommended: upload in the same job
+
+If you need durable artifacts, upload from inside the job to a Dataset/Model/Space repo.
+
+```bash
+hf jobs uv run \
+  --python 3.13 \
+  --with fast-agent-mcp \
+  --with huggingface-hub \
+  --flavor cpu-basic \
+  --timeout 20m \
+  --secrets ANTHROPIC_API_KEY \
+  --secrets HF_TOKEN \
+  -- bash -c "
+    fast-agent go --model sonnet --message 'nightly summary' --results result.json &&
+    hf upload username/fast-agent-results ./result.json result.json --repo-type=dataset
+  "
+```
+
+### Alternative: inspect job outputs/logs
+
+```bash
+hf jobs inspect <job_id>
+hf jobs logs <job_id>
+```
+
+## Command chaining patterns
+
+For multi-step job commands, prefer shell chaining via `bash -c`:
+
+```bash
+hf jobs uv run \
+  --with fast-agent-mcp \
+  --with huggingface-hub \
+  -- bash -c "fast-agent go --results result.json && hf upload ..."
+```
+
+Avoid long inline `python -c` scripts in job submission commands. Use short snippets only, or
+store logic in a checked-in script file.
+
+## Job management quick reference
+
+```bash
+hf jobs ps
+hf jobs inspect <job_id>
+hf jobs logs <job_id>
+hf jobs cancel <job_id>
+hf jobs hardware
+```
+
+## Dataset upload quick reference
+
+```bash
+# Upload to a dataset repo
+hf upload username/dataset-name ./local-file.json remote-path.json --repo-type=dataset
+
+# Upload to a model repo (default)
+hf upload username/model-name ./file.safetensors file.safetensors
+
+# Create PR instead of direct commit
+hf upload username/repo ./file . --create-pr
+```
+
 ## MCP alternative
 
 Hugging Face MCP server includes job-management tools. Prefer CLI examples first for reproducibility unless user specifically requests MCP-invoked job control.

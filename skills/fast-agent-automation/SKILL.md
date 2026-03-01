@@ -25,6 +25,7 @@ Build repeatable automation around `fast-agent` CLI, container, and cloud job ex
 5. Decide output contract:
    - human-readable terminal output
    - machine-readable artifact (`--results`)
+   - Hugging Face Job artifact persistence plan (upload from within the job when needed)
 6. Confirm secret handling before exporting env vars.
 7. Use `fast-agent check models --for-model ... --json` to precompute candidate secret env var names when model(s) are known.
 
@@ -35,6 +36,17 @@ Only relay environment-variable **names** (for example `OPENAI_API_KEY`) through
 channels/stores.
 
 For Hugging Face Jobs specifically, prefer `--secrets NAME` (for example `--secrets OPENAI_API_KEY`).
+
+## Hugging Face Jobs pitfalls to encode in generated guidance
+
+When proposing or generating HF Job commands, include these operational guardrails:
+
+- Use `fast-agent check models --for-model "<model>" --json` first and forward only discovered secret **names**.
+- If the job command itself runs `hf ...` subcommands (for example `hf upload`), include `--with huggingface-hub`.
+- Job files are ephemeral inside the container; recommend uploading artifacts from inside the job to persistent storage.
+- For multi-step in-job flows, prefer `-- bash -c "cmd1 && cmd2"`.
+- Avoid long inline `python -c` blobs in `hf jobs uv run` commands; use `bash -c` or a checked-in script file.
+- Include job lifecycle commands in runbooks (`hf jobs ps`, `inspect`, `logs`, `cancel`, `hardware`).
 
 
 ## Execution mode guidance

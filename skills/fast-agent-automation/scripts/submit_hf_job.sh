@@ -69,25 +69,28 @@ fi
 if [[ "$SECRETS_EXPLICIT" -eq 0 ]]; then
   if [[ -n "$MODEL" ]]; then
     if command -v fast-agent >/dev/null 2>&1; then
-      detected="$(fast-agent check models --for-model "$MODEL" --json 2>/dev/null | python - <<'PY'
-import json, sys
+      detected="$(fast-agent check models --for-model "$MODEL" --json 2>/dev/null | python -c '
+import json
+import sys
+
 text = sys.stdin.read().strip()
 if not text:
     print("")
     raise SystemExit(0)
+
 try:
     payload = json.loads(text)
 except Exception:
     print("")
     raise SystemExit(0)
+
 keys = payload.get("candidate_secret_env_vars") or []
 if isinstance(keys, list):
     clean = [k for k in keys if isinstance(k, str) and k.strip()]
     print(",".join(clean))
 else:
     print("")
-PY
-)"
+')"
       SECRETS="$detected"
     fi
   fi
