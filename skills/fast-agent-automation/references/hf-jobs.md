@@ -149,6 +149,31 @@ hf jobs uv run \
   "
 ```
 
+### Ready-made wrapper (recommended for repeat runs)
+
+Use the bundled script when you want a reusable load/run/save flow:
+
+```bash
+hf jobs uv run \
+  --python 3.13 \
+  --with fast-agent-mcp \
+  --with huggingface-hub \
+  --flavor cpu-basic \
+  --timeout 20m \
+  --secrets ANTHROPIC_API_KEY \
+  --secrets HF_TOKEN \
+  -- bash -lc '
+    skills/fast-agent-automation/scripts/run_and_sync_hf_dataset.sh \
+      --repo username/fast-agent-results \
+      --run-name nightly-summary \
+      --model sonnet \
+      --message "nightly summary" \
+      --results result.json
+  '
+```
+
+See: [hf-dataset-sync.md](hf-dataset-sync.md)
+
 ### Alternative: inspect job outputs/logs
 
 ```bash

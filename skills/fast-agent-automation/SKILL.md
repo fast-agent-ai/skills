@@ -26,6 +26,7 @@ Build repeatable automation around `fast-agent` CLI, container, and cloud job ex
    - human-readable terminal output
    - machine-readable artifact (`--results`)
    - Hugging Face Job artifact persistence plan (upload from within the job when needed)
+   - Prefer script-based dataset sync for pre-run download and post-run publishing
 6. Confirm secret handling before exporting env vars.
 7. Use `fast-agent check models --for-model ... --json` to precompute candidate secret env var names when model(s) are known.
 
@@ -139,9 +140,11 @@ Expect suffixed exports like `compare-haiku.json` and `compare-sonnet.json`.
 - Skills management (`--skills-dir`, card `skills`): [references/skills.md](references/skills.md)
 - Docker images and Dockerfile templates: [references/docker.md](references/docker.md)
 - Hugging Face Jobs (one-off, scheduled, secrets): [references/hf-jobs.md](references/hf-jobs.md)
+- Hugging Face Dataset load/save wrapper patterns: [references/hf-dataset-sync.md](references/hf-dataset-sync.md)
 - Agent card-first architecture patterns: [references/agent-card-patterns.md](references/agent-card-patterns.md)
 
 ## Scripts
 
 - `scripts/run_fast_agent.sh`: local/CI wrapper enforcing `--results` (supports both no-card and card-based runs)
 - `scripts/submit_hf_job.sh`: `hf jobs uv run` helper with explicit secret confirmation (supports both no-card and card-based runs)
+- `scripts/run_and_sync_hf_dataset.sh`: reusable v2 wrapper for optional prompt download + `fast-agent go --results` + dataset upload under `runs/<run-name>/<JOB_ID|generated-id>/`
