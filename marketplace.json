@@ -39,10 +39,10 @@
       "description": "Deploy general static websites and frontend apps to Hugging Face Spaces using sdk: static. Use when hosting HTML/CSS/JS sites or built SPA frontends (React, Vite, Svelte, Vue, etc.) with README YAML metadata (app_file, optional app_build_command), deployment via hf CLI or Python API, GitHub Actions sync, and static-Space troubleshooting."
     },
     {
-      "name": "lsp-project-setup",
-      "source": "./skills/lsp-project-setup",
+      "name": "lsp-setup",
+      "source": "./skills/lsp-setup",
       "skills": "./",
-      "description": "Create or update LSP-ready project scaffolds and agent-card guidance for Python or TypeScript repos. Use when configuring tool cards or agent cards to navigate a codebase with LSP (ty, typescript-language-server), including workspace roots, venvs, and minimal project config references."
+      "description": "Set up fast-agent LSP tooling for Python or TypeScript repos. Use when creating or refreshing agent cards backed by ty or typescript-language-server, including repo-root setup and optional query-scope allowlists."
     },
     {
       "name": "session-investigator",
