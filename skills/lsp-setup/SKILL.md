@@ -28,12 +28,15 @@ ls Cargo.toml 2>/dev/null
 ```
 
 Identify:
+
 - **Language**: Python (`pyproject.toml`), TypeScript (`tsconfig.json`), or Rust (`Cargo.toml`)
 - **Source directories**: Common patterns are `src/`, `lib/`, `app/`, `tests/`, `packages/`, `apps/`, `crates/`, `examples/`, `benches/`
 - **Root-level files you may want to query**: `setup.py`, `manage.py`, `conftest.py`, `build.rs`, etc.
 - **Any existing `.fast-agent/` setup**
 
 ### 2. Create Directory Structure
+
+**IMPORTANT** -- by default the environment directory is `.fast-agent`, but use the environment directory specified earlier if different.
 
 ```bash
 mkdir -p .fast-agent/agent-cards
@@ -44,10 +47,12 @@ mkdir -p .fast-agent/agent-cards
 Copy files from this skill's assets to `.fast-agent/agent-cards/`.
 
 **Python:**
+
 - `assets/python/dev.md` → `.fast-agent/agent-cards/dev.md`
 - `assets/python/multilspy_tools.py` → `.fast-agent/agent-cards/multilspy_tools.py`
 
 **TypeScript:**
+
 - `assets/typescript/dev.md` → `.fast-agent/agent-cards/dev.md`
 - `assets/typescript/multilspy_tools.py` → `.fast-agent/agent-cards/multilspy_tools.py`
 
@@ -84,6 +89,7 @@ _ALLOWED_FILES = {"conftest.py"}
 ```
 
 Common patterns:
+
 - Standard Python: `{"src", "tests", "test", "examples"}`
 - Standard TypeScript: `{"src"}`
 - Monorepo: `{"packages", "apps", "libs"}`
@@ -116,6 +122,7 @@ fast-agent go
 ```
 
 Try:
+
 - `show me the symbols in src/main.py`
 - `find the definition of Foo in src/foo.py at line 12`
 - `show me the symbols in crates/my_crate/src/lib.rs`
