@@ -1,7 +1,7 @@
 ---
 name: dev
-# CUSTOMIZE: Set to your preferred model (e.g., sonnet, opus, gpt-4o, codex)
-model: sonnet
+# Leave this at the configured system default unless you want to pin a model.
+model: $system.default
 default: true
 # OPTIONAL: Enable shell commands
 shell: true
