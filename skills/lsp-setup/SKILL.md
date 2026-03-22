@@ -36,15 +36,19 @@ Identify:
 
 ### 2. Create Directory Structure
 
-**IMPORTANT** -- by default the environment directory is `.fast-agent`, but use the environment directory specified earlier if different.
+**IMPORTANT** -- Use the `fast-agent environment directory` if specified. The default is `.fast-agent/`.
 
 ```bash
 mkdir -p .fast-agent/agent-cards
 ```
 
-### 3. Copy Template Files
+### 3. Create or update the card files
 
-Copy files from this skill's assets to `.fast-agent/agent-cards/`.
+Do **not** blindly overwrite an existing `.fast-agent/agent-cards/dev.md`.
+
+#### If `dev.md` does not exist yet
+
+Create it from this skill's language-specific template:
 
 **Python:**
 
@@ -57,8 +61,64 @@ Copy files from this skill's assets to `.fast-agent/agent-cards/`.
 - `assets/typescript/multilspy_tools.py` → `.fast-agent/agent-cards/multilspy_tools.py`
 
 **Rust:**
+
 - `assets/rust/dev.md` → `.fast-agent/agent-cards/dev.md`
 - `assets/rust/rust_lsp_tools.py` → `.fast-agent/agent-cards/rust_lsp_tools.py`
+
+These starter templates default to `model: $system.default`. Only pin a model if the repo already has a good reason to do that.
+
+#### If `dev.md` already exists
+
+Edit it in place and preserve the existing card configuration.
+
+Keep existing frontmatter values unless you have a specific reason to change them, especially:
+
+- `model`
+- `default`
+- `type`
+- `shell`
+- existing hooks, servers, tools, and other card settings
+
+Model handling is especially important:
+
+- If the existing card already pins a specific `model`, keep it.
+- If the existing card already uses `model: $system.default`, keep that too.
+- If you are creating a new card from scratch, prefer `model: $system.default` unless the repo explicitly needs a pinned model.
+
+Only add the LSP function tools that are missing for the repo's language:
+
+**Python / TypeScript**
+
+```yaml
+function_tools:
+  - multilspy_tools.py:lsp_hover
+  - multilspy_tools.py:lsp_definition
+  - multilspy_tools.py:lsp_references
+  - multilspy_tools.py:lsp_document_symbols
+  - multilspy_tools.py:lsp_workspace_symbols
+  - multilspy_tools.py:lsp_diagnostics
+```
+
+**Rust**
+
+```yaml
+function_tools:
+  - rust_lsp_tools.py:lsp_hover
+  - rust_lsp_tools.py:lsp_definition
+  - rust_lsp_tools.py:lsp_references
+  - rust_lsp_tools.py:lsp_document_symbols
+  - rust_lsp_tools.py:lsp_workspace_symbols
+  - rust_lsp_tools.py:lsp_diagnostics
+```
+
+Do not remove unrelated instructions from the existing prompt body just to add LSP support.
+
+**DO** Add a navigation hint to the card if appropriate.
+
+```markdown
+Use LSP tools for structural queries: definitions, references, symbols, hover info, diagnostics.
+For broad text discovery or file operations, use whatever search tool or card is already available in this environment.
+```
 
 ### 4. Configure the helper module
 
@@ -109,13 +169,7 @@ rust-analyzer --version
 
 Use the Cargo workspace root for `_REPO_ROOT` whenever possible, especially for `crates/*` layouts.
 
-### 5. Optional: Wire in Search Separately
-
-This skill only sets up the LSP tools. If you want broad text/file discovery, add your preferred search card or tool separately.
-
-For deeper Rust setup and troubleshooting notes, see [references/rust.md](references/rust.md).
-
-### 6. Verify Setup
+### 5. Verify Setup
 
 ```bash
 fast-agent go
