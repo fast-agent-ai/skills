@@ -49,6 +49,12 @@
       "source": "./skills/session-investigator",
       "skills": "./",
       "description": "Investigate fast-agent session and history files to diagnose issues. Use when a session ended unexpectedly, when debugging tool loops, when correlating sub-agent traces with main sessions, or when analyzing conversation flow and timing."
+    },
+    {
+      "name": "x-twitter-scraper",
+      "source": "./skills/x-twitter-scraper",
+      "skills": "./",
+      "description": "X (Twitter) data platform skill. Use when the user needs to search tweets, look up users/followers, post tweets, like, retweet, follow/unfollow, send DMs, download media, monitor accounts, extract bulk data, or run giveaway draws via the Xquik API. Provides 120 REST API endpoints, 2 MCP tools, HMAC webhooks, and 23 bulk extraction tools."
     }
   ]
 }
