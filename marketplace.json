@@ -49,6 +49,12 @@
       "source": "./skills/session-investigator",
       "skills": "./",
       "description": "Investigate fast-agent session and history files to diagnose issues. Use when a session ended unexpectedly, when debugging tool loops, when correlating sub-agent traces with main sessions, or when analyzing conversation flow and timing."
+    },
+    {
+      "name": "clicks-protocol",
+      "source": "./skills/clicks-protocol",
+      "skills": "./",
+      "description": "Integrate autonomous USDC yield into AI agent projects on Base. Use when building agents that hold, earn, or transfer USDC, when asked about agent treasury management, DeFi yield for agents, x402 payment optimization, or idle USDC strategies."
     }
   ]
 }
