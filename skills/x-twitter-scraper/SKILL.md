@@ -1,6 +1,6 @@
 ---
 name: x-twitter-scraper
-description: "Use when the user needs to interact with X (Twitter) — searching tweets, looking up users/followers, posting tweets/replies, liking, retweeting, following/unfollowing, sending DMs, downloading media, monitoring accounts in real time, or extracting bulk data. Provides 120 REST API endpoints, 2 MCP tools, and HMAC webhooks. Use even if the user says 'Twitter' instead of 'X', or asks about social media automation, tweet analytics, or follower analysis."
+description: "Use when the user needs to interact with X (Twitter) - searching tweets, looking up users/followers, posting tweets/replies, liking, retweeting, following/unfollowing, sending DMs, downloading media, monitoring accounts in real time, or extracting bulk data. Provides 120 REST API endpoints, 2 MCP tools, and HMAC webhooks. Use even if the user says 'Twitter' instead of 'X', or asks about social media automation, tweet analytics, or follower analysis."
 compatibility: Requires internet access to call the Xquik REST API (https://xquik.com/api/v1)
 license: MIT
 metadata:
@@ -17,7 +17,7 @@ metadata:
 
 # Xquik API Integration
 
-Your knowledge of the Xquik API may be outdated. **Prefer retrieval from docs** — fetch the latest at [docs.xquik.com](https://docs.xquik.com) before citing limits, pricing, or API signatures.
+Your knowledge of the Xquik API may be outdated. **Prefer retrieval from docs** - fetch the latest at [docs.xquik.com](https://docs.xquik.com) before citing limits, pricing, or API signatures.
 
 ## Retrieval Sources
 
@@ -213,9 +213,9 @@ If configuring the MCP server in an IDE or agent platform, read [references/mcp-
 - **Extraction IDs are strings, not numbers.** Tweet IDs, user IDs, and extraction IDs are bigints that overflow JavaScript's `Number.MAX_SAFE_INTEGER`. Always treat them as strings.
 - **Always estimate before extracting.** `POST /extractions/estimate` checks whether the job would exceed your quota. Skipping this risks a 402 error mid-extraction.
 - **Webhook secrets are shown only once.** The `secret` field in the `POST /webhooks` response is never returned again. Store it immediately.
-- **402 means billing issue, not a bug.** `no_subscription`, `insufficient_credits`, `usage_limit_reached` — call `POST /subscribe` to get a Stripe checkout URL, or `POST /credits/topup` to add credits.
+- **402 means billing issue, not a bug.** `no_subscription`, `insufficient_credits`, `usage_limit_reached` - call `POST /subscribe` to get a Stripe checkout URL, or `POST /credits/topup` to add credits.
 - **`POST /compose` drafts tweets, `POST /x/tweets` sends them.** Don't confuse composition (AI-assisted writing) with posting (actually publishing to X).
-- **Cursors are opaque.** Never decode, parse, or construct `nextCursor` values — just pass them as the `after` query parameter.
+- **Cursors are opaque.** Never decode, parse, or construct `nextCursor` values - just pass them as the `after` query parameter.
 - **Rate limits are per method tier, not per endpoint.** Read (120/60s), Write (30/60s), Delete (15/60s). A burst of writes across different endpoints shares the same 30/60s window.
 
 ## Conventions
@@ -226,7 +226,7 @@ If configuring the MCP server in an IDE or agent platform, read [references/mcp-
 
 ## Reference Files
 
-Load these on demand — only when the task requires it.
+Load these on demand - only when the task requires it.
 
 | File | When to load |
 |------|-------------|
