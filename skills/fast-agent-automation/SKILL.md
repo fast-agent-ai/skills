@@ -25,6 +25,7 @@ Build repeatable automation around `fast-agent` CLI, container, and cloud job ex
 5. Decide output contract:
    - human-readable terminal output
    - machine-readable artifact (`--results`)
+   - machine-readable stdout contract (`--json-schema` for one-shot runs)
    - Hugging Face Job artifact persistence plan (upload from within the job when needed)
    - Prefer script-based dataset sync for pre-run download and post-run publishing
 6. Confirm secret handling before exporting env vars.
@@ -48,7 +49,6 @@ When proposing or generating HF Job commands, include these operational guardrai
 - For multi-step in-job flows, prefer `-- bash -c "cmd1 && cmd2"`.
 - Avoid long inline `python -c` blobs in `hf jobs uv run` commands; use `bash -c` or a checked-in script file.
 - Include job lifecycle commands in runbooks (`hf jobs ps`, `inspect`, `logs`, `cancel`, `hardware`).
-
 
 ## Execution mode guidance
 
@@ -82,6 +82,19 @@ Treat terminal output and `--results` as different products.
 
 For non-trivial automation, always set `--results` and parse that file (prefer JSON). Do not treat raw terminal capture as source-of-truth output.
 
+### Exception: strict one-shot JSON stdout
+
+When the caller explicitly needs a single validated JSON document on stdout, use:
+
+- `fast-agent go --no-env --message ... --json-schema schema.json`
+- or `fast-agent go --no-env --prompt-file ... --json-schema schema.json`
+
+In this mode:
+
+- stdout is the source of truth
+- local schema validation is enforced before emission
+- multi-model fan-out is intentionally unsupported
+
 ## Quick patterns
 
 ## Model selection policy (important)
@@ -106,6 +119,7 @@ Default agent/instruction (no card):
 
 ```bash
 fast-agent go \
+  --noenv \
   --model sonnet \
   --message "Summarize findings" \
   --results ./artifacts/run.json
@@ -115,6 +129,7 @@ Card-based run:
 
 ```bash
 fast-agent go \
+  --no-env \
   --card ./cards \
   --agent researcher \
   --model sonnet \
@@ -133,6 +148,18 @@ fast-agent go \
 ```
 
 Expect suffixed exports like `compare-haiku.json` and `compare-sonnet.json`.
+
+### Structured stdout recipe
+
+```bash
+fast-agent go \
+  --no-env \
+  --card ./cards \
+  --agent researcher \
+  --model sonnet \
+  --message "What is the weather in London?" \
+  --json-schema ./schema.json
+```
 
 ## Reference map
 

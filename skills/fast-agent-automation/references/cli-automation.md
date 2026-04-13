@@ -31,6 +31,7 @@ Core options:
 
 - `--message`, `-m`: send text and exit interactive mode
 - `--prompt-file`, `-p`: load prompt from text/JSON file
+- `--json-schema`: one-shot structured mode; validates output and writes only JSON to stdout
 - `--results`: export resulting history to file
 - `--model`, `--models`: single model or comma-separated list for fan-out
 - `--agent`: target a specific agent by name
@@ -49,6 +50,7 @@ Core options:
 - Human-facing output for current execution.
 - In simple `--message` flow, prints returned assistant text.
 - In parallel model flow without a specific target agent, prints formatted parallel display.
+- In `--json-schema` mode, prints only the final validated JSON document.
 
 ### `--results`
 
@@ -56,6 +58,24 @@ Core options:
 - If file extension is `.json`, writes enhanced structured message JSON.
 - Non-JSON path writes delimited text format.
 - In multi-model fan-out without `--agent`, writes per-model suffixed files.
+
+## Structured stdout mode
+
+Use this when automation needs one exact JSON document from stdout instead of exported history.
+
+```bash
+fast-agent go \
+  --noenv \
+  --model sonnet \
+  --message "What is the weather in London?" \
+  --json-schema ./schema.json
+```
+
+Rules:
+
+- requires `--message` or `--prompt-file`
+- not supported with comma-separated multi-model fan-out
+- prefer this over `--results` only when stdout itself is the integration boundary
 
 ## Recommended CI recipe
 
