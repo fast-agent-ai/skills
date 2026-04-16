@@ -9,7 +9,12 @@ Diagnose fast-agent session issues by examining session and history files.
 
 ## Session Directory Structure
 
-Sessions are stored in `.fast-agent/sessions/<session-id>/`:
+Sessions are stored in a client-specific session root, commonly:
+
+- `.fast-agent/sessions/<session-id>/`
+- `.cdx/sessions/<session-id>/`
+
+Typical layout:
 
 ```
 2601181023-Kob2h3/
@@ -23,6 +28,73 @@ Session IDs encode creation time: `YYMMDDHHMM-<random>` (e.g., `2601181023` = 20
 ## Key Files
 
 ### session.json
+
+There are now two formats in the wild:
+
+#### Current v2 snapshot format
+
+```json
+{
+  "schema_version": 2,
+  "session_id": "2601181023-Kob2h3",
+  "created_at": "2026-01-18T10:23:24.116526",
+  "last_activity": "2026-01-18T10:39:42.873467",
+  "metadata": {
+    "title": null,
+    "label": null,
+    "first_user_preview": "is it possible to override...",
+    "pinned": false,
+    "extras": {
+      "model": "$system.default"
+    }
+  },
+  "continuation": {
+    "active_agent": "dev",
+    "cwd": null,
+    "lineage": {
+      "forked_from": null,
+      "acp_session_id": null
+    },
+    "agents": {
+      "dev": {
+        "history_file": "history_dev.json",
+        "resolved_prompt": "...",
+        "model": "gpt-5.4",
+        "provider": "codexresponses",
+        "request_settings": {
+          "use_history": true,
+          "parallel_tool_calls": true
+        },
+        "card_provenance": [{"ref": "/abs/path/to/card.md"}],
+        "attachment_refs": [],
+        "model_overlay_refs": []
+      }
+    }
+  },
+  "analysis": {
+    "usage_summary": {
+      "input_tokens": 1234,
+      "output_tokens": 56,
+      "total_tokens": 1290
+    },
+    "timing_summary": null,
+    "provider_diagnostics": [],
+    "transport_diagnostics": []
+  }
+}
+```
+
+Key v2 fields:
+
+- `schema_version: 2` marks the typed snapshot format.
+- `session_id` replaces legacy `name`.
+- `continuation.active_agent` replaces legacy `metadata.agent_name`.
+- `continuation.agents.<agent>.history_file` replaces legacy top-level `history_files` as the authoritative per-agent mapping.
+- `analysis.usage_summary` is persisted inspection data, not live runtime truth.
+
+#### Legacy unversioned format
+
+Older sessions may still use:
 
 ```json
 {
@@ -64,6 +136,37 @@ Session IDs encode creation time: `YYMMDDHHMM-<random>` (e.g., `2601181023` = 20
 ### Basic inspection
 
 ```bash
+# Detect session format / top-level keys
+jq '{schema_version, session_id: (.session_id // .name), top_level_keys: keys}' session.json
+
+# Show session headline fields for either legacy or v2
+jq '{
+  session_id: (.session_id // .name),
+  created_at,
+  last_activity,
+  pinned: (.metadata.pinned // false),
+  title: (.metadata.title // .metadata.label // .metadata.first_user_preview // null),
+  active_agent: (.continuation.active_agent // .metadata.agent_name // null)
+}' session.json
+
+# List per-agent history files for either legacy or v2
+jq 'if .schema_version == 2 then
+      (.continuation.agents // {} | to_entries | map({
+        agent: .key,
+        history_file: .value.history_file,
+        model: .value.model,
+        provider: .value.provider
+      }))
+    else
+      ((.metadata.last_history_by_agent // {}) | to_entries | map({
+        agent: .key,
+        history_file: .value
+      }))
+    end' session.json
+
+# Show persisted analysis/usage summary when present
+jq '.analysis // {}' session.json
+
 # Message count
 jq '.messages | length' history_dev.json
 
@@ -99,6 +202,28 @@ jq '.messages | to_entries | .[] |
 ```
 
 ## Session Statistics
+
+### Session Snapshot Stats
+
+```bash
+# Persisted token summary from v2 session snapshot
+jq '.analysis.usage_summary // null' session.json
+
+# Rich per-agent continuation summary from v2 snapshot
+jq 'if .schema_version == 2 then
+      .continuation.agents | to_entries | map({
+        agent: .key,
+        history_file: .value.history_file,
+        model: .value.model,
+        provider: .value.provider,
+        has_prompt: (.value.resolved_prompt != null),
+        attachment_refs: (.value.attachment_refs | map(.ref)),
+        overlays: (.value.model_overlay_refs | map(.ref))
+      })
+    else
+      "legacy-session"
+    end' session.json
+```
 
 ### LLM Call Stats
 
@@ -183,6 +308,8 @@ jq '.messages[-1] | {role, has_tool_calls: (.tool_calls != null), stop_reason}' 
 
 **Cause**: Session interrupted mid-tool-loop, then resumed with new user input before tool completed.
 
+When working with v2 snapshots, you usually fix the relevant `history_<agent>.json`, not `session.json`. The snapshot just points at the history file via `continuation.agents.<agent>.history_file`.
+
 **Fix**: Truncate history to last valid tool result:
 
 ```bash
@@ -198,6 +325,27 @@ jq '.messages = .messages[0:227]' history_dev.json > /tmp/fixed.json && mv /tmp/
 **Pattern**: Two consecutive `user` messages before assistant response.
 
 **Cause**: Often from `before_llm_call` hooks appending instructions. Check agent card's `tool_hooks` configuration.
+
+### Missing or mismatched resumed agent
+
+**Pattern**: Resumed session loads, but the expected active agent is unavailable or different.
+
+Inspect:
+
+```bash
+# v2 active agent + known persisted agents
+jq '{
+  active_agent: (.continuation.active_agent // .metadata.agent_name // null),
+  persisted_agents: (
+    if .schema_version == 2
+    then (.continuation.agents | keys)
+    else ((.metadata.last_history_by_agent // {}) | keys)
+    end
+  )
+}' session.json
+```
+
+If a persisted agent exists in `session.json` but is missing from the current runtime, expect resume warnings about a missing agent and partial hydration.
 
 ## Sub-agent Trace Correlation
 
@@ -226,3 +374,10 @@ cat fastagent.jsonl | while read line; do
   fi
 done
 ```
+
+## Practical Notes
+
+- Prefer inspecting `session.json` first to identify the active agent and the authoritative history file path.
+- For v2 sessions, treat `continuation.agents` as the source of truth for per-agent state.
+- For legacy sessions, expect only coarse metadata plus `history_files` / `metadata.last_history_by_agent`.
+- `analysis` data in v2 is helpful for inspection, but resumed runtime state may be rebuilt from history rather than copied verbatim from the snapshot.
