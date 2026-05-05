@@ -25,7 +25,7 @@ Build repeatable automation around `fast-agent` CLI, container, and cloud job ex
 5. Decide output contract:
    - human-readable terminal output
    - machine-readable artifact (`--results`)
-   - machine-readable stdout contract (`--json-schema` for one-shot runs)
+   - machine-readable stdout contract (`--json-schema` or `--schema-model` for one-shot runs)
    - Hugging Face Job artifact persistence plan (upload from within the job when needed)
    - Prefer script-based dataset sync for pre-run download and post-run publishing
 6. Confirm secret handling before exporting env vars.
@@ -73,6 +73,7 @@ Treat terminal output and `--results` as different products.
 - Terminal output (`stdout`):
   - For `--message`, usually the final assistant text printed for humans.
   - For multi-model no target-agent case, formatted display panels/summaries are shown.
+  - For structured stdout mode, only the final validated JSON document is printed.
 - `--results <path>`:
   - Exports **agent message history** from `message_history`.
   - For multi-model runs, writes per-model suffixed files.
@@ -88,11 +89,17 @@ When the caller explicitly needs a single validated JSON document on stdout, use
 
 - `fast-agent go --no-env --message ... --json-schema schema.json`
 - or `fast-agent go --no-env --prompt-file ... --json-schema schema.json`
+- or `fast-agent go --no-env --message ... --schema-model package.module:ResultModel`
+- or `fast-agent go --no-env --prompt-file ... --schema-model package.module:ResultModel`
 
 In this mode:
 
 - stdout is the source of truth
 - local schema validation is enforced before emission
+- `--schema-model` must point to an importable Pydantic `BaseModel` subclass
+- prefer `--schema-model` when the caller already has typed Pydantic contracts; it preserves
+  fast-agent's normal provider/model-specific structured-output sanitization path
+- `--json-schema` and `--schema-model` are mutually exclusive
 - multi-model fan-out is intentionally unsupported
 
 ## Quick patterns
@@ -159,6 +166,18 @@ fast-agent go \
   --model sonnet \
   --message "What is the weather in London?" \
   --json-schema ./schema.json
+```
+
+Pydantic contract variant:
+
+```bash
+fast-agent go \
+  --no-env \
+  --card ./cards \
+  --agent researcher \
+  --model sonnet \
+  --message "What is the weather in London?" \
+  --schema-model automation_schemas:WeatherResult
 ```
 
 ## Reference map

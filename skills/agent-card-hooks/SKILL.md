@@ -1,21 +1,37 @@
 ---
 name: agent-card-hooks
-description: Guide for implementing fast-agent hooks. Use when adding hook functions to agent cards or Python code for tasks like history compaction, saving sessions, modifying tool calls, or managing agent lifecycle.
+description: Guide for implementing fast-agent hooks and user-invoked command actions. Use when adding hook functions to agent cards or Python code for tasks like history compaction, saving sessions, modifying tool calls, managing agent lifecycle, or adding explicit slash-command add-ins with PluginCommandActionContext.
 ---
 
-# Implement agent hooks
+# Implement agent hooks and command actions
 
 Hooks let you intercept and customize agent behavior at specific points in the
 tool loop (per-turn) or agent lifecycle (start/shutdown).
+
+Command actions are related but explicit: users invoke them with `/command` or
+optional TUI keybindings. Use command actions for add-ins such as editing recent
+history, drafting the next user message, or asking another agent to review
+context.
 
 **Audience**: Developers adding custom hook logic to fast-agent agents.
 
 ## Quick workflow
 
-1. Identify which hook points you need (tool loop vs lifecycle).
-2. Implement async hook functions with the correct context type.
-3. Wire hooks via agent card YAML or Python class assignment.
-4. Test hooks with the smoke test script or real agents. You may need the User to assist with this step.
+1. Decide whether the behavior should be automatic (hook) or user-invoked (command action).
+2. Implement async functions with the correct context type.
+3. Wire hooks via agent card YAML/Python class assignment, or wire command actions via `commands:`.
+4. Test with the smoke test script, slash commands, or real agents. You may need the User to assist with this step.
+
+## Choosing hooks vs command actions
+
+| Use | Choose | Why |
+| --- | --- | --- |
+| Always trim history after each turn | Hook | Automatic lifecycle behavior |
+| Save history after each completed turn | Hook | No user decision required |
+| Start/stop an external service with an agent | Lifecycle hook | Agent instance lifecycle |
+| Draft the next user message into the input buffer | Command action | User should review before submitting |
+| Edit or annotate the previous assistant message | Command action | Explicit user-directed history change |
+| Ask `critic` to review recent context on demand | Command action | User chooses when to run it |
 
 ## Hook points
 
@@ -262,6 +278,87 @@ Related example files:
 - `assets/examples/hook_translate_agent.md`
 - `assets/examples/translator_agent.md`
 
+## Command actions
+
+Command actions are async Python add-ins invoked by users:
+
+```text
+/draft-next concise
+/review-last critic
+```
+
+They can be configured globally in `fast-agent.yaml` or on an AgentCard.
+Built-in slash commands win first, AgentCard commands win over global commands,
+and unknown commands fall through normally.
+
+Global config:
+
+```yaml
+commands:
+  draft-next:
+    description: Draft the next user message
+    input_hint: "[format]"
+    handler: "./command-actions.py:draft_next"
+    key: "c-x d"
+```
+
+AgentCard frontmatter:
+
+```yaml
+---
+type: smart
+name: dev
+commands:
+  review-last:
+    description: Ask another agent to review the latest response
+    input_hint: "[agent-name]"
+    handler: "./commands.py:review_last"
+---
+```
+
+Handler functions receive `PluginCommandActionContext` and return
+`PluginCommandActionResult`, `str`, or `None`:
+
+```python
+from fast_agent.command_actions import (
+    PluginCommandActionContext,
+    PluginCommandActionResult,
+)
+
+
+async def draft_next(ctx: PluginCommandActionContext) -> PluginCommandActionResult:
+    drafter = ctx.get_agent("drafter") or ctx.agent
+    style = ctx.arguments.strip() or "concise"
+
+    draft = await drafter.send(
+        "Draft the next user message based on the current conversation. "
+        f"Use this format: {style}. "
+        "Return only the proposed user message."
+    )
+
+    return PluginCommandActionResult(
+        message="Drafted the next user message.",
+        buffer_prefill=draft.strip(),
+    )
+```
+
+Key command-action points:
+
+- `buffer_prefill` replaces the TUI input buffer but does not submit.
+- `ctx.get_agent(name)` can call another configured agent.
+- `ctx.message_history` and `ctx.load_message_history(...)` can inspect/mutate current history.
+- `ctx.mark_user_adjusted(message, note=...)` records provenance in `fast-agent.audit`.
+- For editor-backed commands, run the blocking editor in `asyncio.to_thread(...)`,
+  use `ctx.session_cwd` as the subprocess cwd when available, and return
+  reviewable edits as `buffer_prefill` unless you intentionally mutate history.
+- Do not swallow editor failures with broad `except Exception`; return a concise
+  `PluginCommandActionResult(message=...)` for expected `subprocess`/I/O errors.
+- Relative handler paths in AgentCards resolve from the AgentCard directory.
+- Relative handler paths in global config resolve from the resolved `fast-agent.yaml`.
+
+See [references/command-actions.md](references/command-actions.md) for the detailed API,
+including a complete `$VISUAL`/`$EDITOR` `/editlast` example.
+
 ## Testing hooks
 
 ### Smoke test script
@@ -317,3 +414,4 @@ Copy and adapt these for your use case.
 ## References
 
 - [references/hook-api.md](references/hook-api.md) — Detailed API reference with all types and signatures
+- [references/command-actions.md](references/command-actions.md) — Command action configuration and handler API

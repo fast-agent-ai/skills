@@ -32,6 +32,8 @@ Core options:
 - `--message`, `-m`: send text and exit interactive mode
 - `--prompt-file`, `-p`: load prompt from text/JSON file
 - `--json-schema`: one-shot structured mode; validates output and writes only JSON to stdout
+- `--schema-model`: one-shot structured mode from an importable Pydantic `BaseModel`
+  (`module.path:ClassName`); validates output and writes only JSON to stdout
 - `--results`: export resulting history to file
 - `--model`, `--models`: single model or comma-separated list for fan-out
 - `--agent`: target a specific agent by name
@@ -50,7 +52,8 @@ Core options:
 - Human-facing output for current execution.
 - In simple `--message` flow, prints returned assistant text.
 - In parallel model flow without a specific target agent, prints formatted parallel display.
-- In `--json-schema` mode, prints only the final validated JSON document.
+- In structured stdout mode (`--json-schema` or `--schema-model`), prints only the final
+  validated JSON document.
 
 ### `--results`
 
@@ -71,10 +74,35 @@ fast-agent go \
   --json-schema ./schema.json
 ```
 
+Pydantic contract variant:
+
+```python
+from pydantic import BaseModel
+
+
+class WeatherResult(BaseModel):
+    location: str
+    condition: str
+    temperature_c: float | None = None
+```
+
+```bash
+fast-agent go \
+  --noenv \
+  --model sonnet \
+  --message "What is the weather in London?" \
+  --schema-model automation_schemas:WeatherResult
+```
+
 Rules:
 
 - requires `--message` or `--prompt-file`
+- `--json-schema` and `--schema-model` are mutually exclusive
+- `--schema-model` must point to an importable Pydantic `BaseModel` subclass; run from a directory
+  where the module is importable, or set `PYTHONPATH`
 - not supported with comma-separated multi-model fan-out
+- model-specific provider sanitization/transformation still happens because `--schema-model` uses
+  the normal Pydantic structured-output path
 - prefer this over `--results` only when stdout itself is the integration boundary
 
 ## Recommended CI recipe

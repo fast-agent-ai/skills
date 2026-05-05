@@ -12,7 +12,7 @@
       "name": "agent-card-hooks",
       "source": "./skills/agent-card-hooks",
       "skills": "./",
-      "description": "Guide for implementing fast-agent agent card tool hooks and lifecycle hooks. Use when you need to add hook functions to agent cards (tool_hooks, lifecycle_hooks, trim_tool_history) for tasks like compaction, saving history, modifying tool calls, or starting/shutting down external services."
+      "description": "Guide for implementing fast-agent agent card tool hooks, lifecycle hooks, and user-invoked command actions. Use when adding hook functions (tool_hooks, lifecycle_hooks, trim_tool_history) or slash-command add-ins with PluginCommandActionContext for compaction, saving history, modifying tool calls, drafting messages, reviewing context, or managing agent lifecycle."
     },
     {
       "name": "compaction-strategies",
