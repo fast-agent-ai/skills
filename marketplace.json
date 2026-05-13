@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Official skills collection for fast-agent. Core tools for agent card development, deployment, and debugging.",
-    "version": "1.1.2"
+    "version": "1.1.3"
   },
   "plugins": [
     {
@@ -13,6 +13,12 @@
       "source": "./skills/agent-card-hooks",
       "skills": "./",
       "description": "Guide for implementing fast-agent agent card tool hooks, lifecycle hooks, and user-invoked command actions. Use when adding hook functions (tool_hooks, lifecycle_hooks, trim_tool_history) or slash-command add-ins with PluginCommandActionContext for compaction, saving history, modifying tool calls, drafting messages, reviewing context, or managing agent lifecycle."
+    },
+    {
+      "name": "birchline-html",
+      "source": "./skills/birchline-html",
+      "skills": "./",
+      "description": "Create polished standalone single-file HTML engineering artifacts in the Birchline design language. Use for session summaries, explainers, implementation plans, PR/change writeups, code reviews, reports, slide decks, flow diagrams, and compact numeric/data briefs with embedded CSS and no external assets."
     },
     {
       "name": "compaction-strategies",
