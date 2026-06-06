@@ -111,7 +111,8 @@ command = candidate_run.run_command(
     timeout_seconds=900,
     log_prefix="eval",
 )
-score = candidate_run.write_score(score_value, side_info, metadata={"ok": command.ok})
+candidate_run.write_score(score_value, side_info, metadata={"ok": command.ok})
+return score_value, side_info
 ```
 
 Use `FastAgentReflectionLM` when GEPA reflection should use fast-agent model aliases/config and leave an audit trail:
@@ -163,19 +164,18 @@ smoke checks, or score regressions that should interrupt an autonomous loop.
 
 ## Demo Card Pack
 
-The default fast-agent card-pack registry includes `gepa-demo`, a starter pack
-with one batch evaluator demo and one artifact evaluator demo:
+When the GEPA demo pack is available in the configured card-pack registry, use it
+as a quick smoke test for the evaluator shape it ships:
 
 ```bash
 fast-agent go --pack gepa-demo
 uv run .fast-agent/scripts/gepa-run.py --evaluate-only
-uv run .fast-agent/scripts/gepa-artifact-run.py --evaluate-only
 ```
 
 Keep pack examples aligned with this skill:
 
 - batch demo: AgentCard `variables`, `FastAgentBatchEvaluator`, `FastAgentReflectionLM`;
-- artifact demo: `EvalRun`, `CandidateRun`, checker reports, and `write_score`;
+- artifact demo, when present: `EvalRun`, `CandidateRun`, checker reports, and `write_score`;
 - all `side_info["scores"]` values higher-is-better;
 - Trackio logging optional and separate from GEPA frontier semantics.
 
