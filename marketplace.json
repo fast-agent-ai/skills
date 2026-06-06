@@ -33,6 +33,12 @@
       "description": "Automate fast-agent runs from CLI, Docker, and Hugging Face Jobs. Use when users need repeatable non-interactive execution (fast-agent go --message / --prompt-file), deterministic artifact handling (--results), multi-model fan-out, containerization, or scheduled/cloud execution with hf jobs and secrets management."
     },
     {
+      "name": "gepa-fast-agent",
+      "source": "./skills/gepa-fast-agent",
+      "skills": "./",
+      "description": "Build, review, or refactor GEPA optimization loops that use fast-agent. Use when designing GEPA evaluators, Actionable Side Information, Pareto/frontier metrics, FastAgentReflectionLM, FastAgentBatchEvaluator, BatchRunner, EvalRun/CandidateRun artifact layouts, Trackio monitoring, or OpenClaw/Birch-style prompt, policy, skill, batch, and artifact-generation optimizers."
+    },
+    {
       "name": "hf-space-deployer",
       "source": "./skills/hf-space-deployer",
       "skills": "./",
