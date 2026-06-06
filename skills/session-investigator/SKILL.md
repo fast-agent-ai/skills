@@ -65,7 +65,7 @@ There are now two formats in the wild:
           "use_history": true,
           "parallel_tool_calls": true
         },
-        "card_provenance": [{"ref": "/abs/path/to/card.md"}],
+        "card_provenance": [{ "ref": "/abs/path/to/card.md" }],
         "attachment_refs": [],
         "model_overlay_refs": []
       }
@@ -363,11 +363,11 @@ Compare `start_time`/`end_time` values between main session and sub-agent traces
 
 ## Log File
 
-Check `fastagent.jsonl` for errors during the session timeframe:
+Check `fast-agent-log.jsonl` for errors during the session timeframe:
 
 ```bash
 # Filter by timestamp range
-cat fastagent.jsonl | while read line; do
+cat fast-agent-log.jsonl | while read line; do
   ts=$(echo "$line" | jq -r '.timestamp // empty' 2>/dev/null)
   if [[ "$ts" > "2026-01-18T10:20" && "$ts" < "2026-01-18T10:45" ]]; then
     echo "$line" | jq -c '{timestamp, level, message}'
