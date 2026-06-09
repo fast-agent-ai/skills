@@ -6,14 +6,13 @@ inside standalone Birchline HTML without hiding the underlying Matplotlib API.
 
 from __future__ import annotations
 
+import re
 from contextlib import contextmanager
 from io import StringIO
-import re
 from typing import Iterator
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-
 
 COLORS = {
     "ivory": "#FAF9F5",

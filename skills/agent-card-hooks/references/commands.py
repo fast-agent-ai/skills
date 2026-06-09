@@ -1,3 +1,13 @@
+import asyncio
+import os
+import shlex
+import subprocess
+import tempfile
+from pathlib import Path
+
+from fast_agent.plugins.commands import PluginCommandActionContext, PluginCommandActionResult
+
+
 async def editlast(ctx: PluginCommandActionContext) -> PluginCommandActionResult:
     """Open the last assistant message in $VISUAL/$EDITOR and prefill edits."""
     for message in reversed(ctx.message_history):
